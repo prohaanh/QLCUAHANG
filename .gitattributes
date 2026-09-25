@@ -1,0 +1,18 @@
+# Tự động chuẩn hóa file văn bản
+* text=auto
+# Các file mã nguồn dùng line ending theo hệ điều hành
+*.ts text
+*.tsx text
+*.js text
+*.jsx text
+*.json text
+*.css text
+*.md text
+*.sql text
+# File nhị phân không được chuyển đổi
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary

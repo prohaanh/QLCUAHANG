@@ -1,0 +1,10 @@
+{
+  "name": "QLCuaHang",
+  "short_name": "QLCuaHang",
+  "description": "Quản lý cửa hàng sửa chữa phần cứng",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F6F3EC",
+  "theme_color": "#12312A",
+  "icons": []
+}

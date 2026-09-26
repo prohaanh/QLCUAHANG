@@ -22,7 +22,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <span>
               {user.full_name} · {user.role === 'admin' ? 'Quản trị' : 'Nhân viên'}
             </span>
-            <LogoutButton />
+            <div className="flex items-center gap-4">
+              {user.role === 'admin' && (
+                <a href="/admin/users" className="hover:underline">
+                  quản lý người dùng
+                </a>
+              )}
+              <LogoutButton />
+            </div>
           </div>
         )}
         {children}

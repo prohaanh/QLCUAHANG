@@ -18,11 +18,21 @@ export async function getCurrentUser(): Promise<UserProfile | null> {
 
   if (!user) return null
 
-  const { data: profile } = await supabase
+  let { data: profile } = await supabase
     .from('users')
-    .select('full_name, role')
+    .select('id, full_name, role')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
+
+  // Older project databases link the profile through auth_user_id instead of users.id.
+  if (!profile) {
+    const { data: linkedProfile } = await supabase
+      .from('users')
+      .select('id, full_name, role')
+      .eq('auth_user_id', user.id)
+      .maybeSingle()
+    profile = linkedProfile
+  }
 
   return {
     id: user.id,

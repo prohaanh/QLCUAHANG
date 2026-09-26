@@ -1,4 +1,44 @@
-.env.local
-.env
+# Dependencies
 node_modules/
+/.pnp
+.pnp.js
+
+# Next.js
 .next/
+out/
+.vercel/
+.turbo/
+
+# Production builds
+build/
+dist/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Test / coverage
+coverage/
+*.lcov
+
+# Supabase local state
+supabase/.temp/
+
+# Misc local caches
+.cache/
+*.tsbuildinfo
+

@@ -23,6 +23,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               {user.full_name} · {user.role === 'admin' ? 'Quản trị' : 'Nhân viên'}
             </span>
             <div className="flex items-center gap-4">
+              <a href="/customers" className="hover:underline">
+                khách hàng
+              </a>
               {user.role === 'admin' && (
                 <a href="/admin/users" className="hover:underline">
                   quản lý người dùng

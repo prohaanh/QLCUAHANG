@@ -76,13 +76,13 @@ export async function updateUserJobFunctions(formData: FormData) {
   if (!id) throw new Error('Thiếu người dùng.')
   const jobFunctionIds = formData.getAll('job_functions').map(String)
 
-  const admin = createAdminClient()
+  const supabase = createClient()
 
-  const { error: delErr } = await admin.from('user_job_functions').delete().eq('user_id', id)
+  const { error: delErr } = await supabase.from('user_job_functions').delete().eq('user_id', id)
   if (delErr) throw new Error(delErr.message)
 
   if (jobFunctionIds.length > 0) {
-    const { error: insErr } = await admin
+    const { error: insErr } = await supabase
       .from('user_job_functions')
       .insert(jobFunctionIds.map((job_function_id) => ({ user_id: id, job_function_id })))
     if (insErr) throw new Error(insErr.message)

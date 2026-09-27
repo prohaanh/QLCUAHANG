@@ -27,9 +27,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 khách hàng
               </a>
               {user.role === 'admin' && (
-                <a href="/admin/users" className="hover:underline">
-                  quản lý người dùng
-                </a>
+                <>
+                  <a href="/admin/products" className="hover:underline">
+                    Quản lý sản phẩm
+                  </a>
+                  <a href="/admin/users" className="hover:underline">
+                    quản lý người dùng
+                  </a>
+                </>
               )}
               <LogoutButton />
             </div>

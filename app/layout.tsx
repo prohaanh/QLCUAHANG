@@ -26,6 +26,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <a href="/customers" className="hover:underline">
                 khách hàng
               </a>
+              <a href="/orders" className="hover:underline">
+                Đơn hàng
+              </a>
               {user.role === 'admin' && (
                 <>
                   <a href="/admin/products" className="hover:underline">

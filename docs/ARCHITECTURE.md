@@ -22,6 +22,9 @@ QLCuaHang is an internal shop-management web app for customers, products, servic
 | `/customers/new` | Create a customer | Authenticated |
 | `/customers/[id]` | Customer details, tier/spend, orders, licenses, follow state | Authenticated |
 | `/admin/products` | Product/service catalog, categories, stock entry | Admin intent; local implementation needs the guard review below |
+| `/admin/products/[id]/history` | Read inventory movements for one product | Authenticated |
+| `/orders` | Recent orders and create-order entry point | Authenticated |
+| `/orders/[id]` | Order items, payment state, and fulfillment state | Authenticated |
 
 Authentication routing is in `middleware.ts`. It redirects unauthenticated requests to `/login`, but it does not by itself authorize admin operations.
 
@@ -81,6 +84,8 @@ The local admin layout contains a `Quản lý sản phẩm` link to `/admin/prod
 - Product server actions should surface Supabase errors for create/update operations instead of silently revalidating.
 - Product and stock routes depend on migrations `008` and `009`; verify both ran in the target database before enabling the feature there.
 - The stock ledger relies on database triggers. Test paid orders, backorders, delivery, and negative-stock rejection against a non-production database before release.
+- Local read-only verification of `/orders` returned the empty-state page; an order was not created because `.env.local` points to the shared Supabase project. The order write path remains unverified end-to-end.
+- `updateItemFulfillment` comments imply stock is deducted on delivery only after payment, but `auto_deduct_stock_on_fulfilled()` in migration `008` does not check the parent order status. Reconcile the intended behavior and trigger before testing fulfillment writes.
 - `005_grant_authenticated_full.sql` grants broad SQL privileges to `authenticated`, including defaults for future tables. RLS is still required and should be audited for every table.
 - `package.json` pins Next.js `14.2.15`; review and upgrade to a patched compatible release before production shipping.
 - Legacy root-level files such as `route.ts`, `auth.ts`, and duplicate Supabase clients may not be active routes. Trace imports/callers before extending them; avoid adding another parallel implementation.

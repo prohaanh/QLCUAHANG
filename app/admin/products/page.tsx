@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import ProductForm from './ProductForm'
 import CategoryManager from './CategoryManager'
@@ -42,6 +43,12 @@ export default async function ProductsPage() {
                 </td>
                 <td className="p-2">{p.warranty_months}</td>
                 <td className="p-2">
+                  <Link
+                    href={`/admin/products/${p.id}/history`}
+                    className="text-blue-600 underline mr-2"
+                  >
+                    Lịch sử kho
+                  </Link>
                   <ProductForm categories={categories ?? []} product={p} />
                 </td>
               </tr>

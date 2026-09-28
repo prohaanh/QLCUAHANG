@@ -1,28 +1,29 @@
-# Nhánh 3B — Quản lý sản phẩm/dịch vụ
+# Nhánh Đơn hàng (/orders) + Lịch sử tồn kho + Đặt trước/Đã giao
 
-## Trạng thái
+## Đã làm trong bản này
+- `app/orders/page.tsx` — danh sách đơn hàng, nút "Tạo đơn mới"
+- `app/orders/actions.ts` — Server Actions: createOrder, addOrderItem, removeOrderItem,
+  updateOrderStatus, updateItemFulfillment, searchCatalog
+- `app/orders/[id]/page.tsx` + `OrderDetailClient.tsx` — chi tiết đơn: thêm sản phẩm/dịch
+  vụ/license, đổi trạng thái thanh toán (`mo`/`da_thanh_toan`/`huy`), và với từng dòng sản
+  phẩm có dropdown đổi trạng thái giao hàng (`dat_truoc`/`du_hang`/`da_giao`)
+- `app/admin/products/[id]/history/page.tsx` — lịch sử `inventory_movements` của 1 sản phẩm
 
-- Các file route, Server Actions, form sản phẩm và quản lý nhóm nằm trong `app/admin/products/`.
-- Link **Quản lý sản phẩm** cho admin nằm trong `app/layout.tsx`.
-- Người vận hành xác nhận `supabase/migrations/008_nhom_va_ton_kho.sql` và
-   `supabase/migrations/009_xoa_nhom_set_null.sql` đã chạy thành công trên Supabase ngày 2026-09-27.
-- Build local đã chạy thành công. Trạng thái push và Vercel production phải kiểm tra riêng bằng GitHub/Vercel.
+## Kết quả rà soát local ngày 2026-09-27
 
-## Hành vi đã triển khai
+1. ✅ Các route trong `app/orders/` và `app/admin/products/[id]/history/` đã có trong repo.
+2. ✅ Đã thêm link **Lịch sử kho** vào từng sản phẩm tại `/admin/products`.
+3. ✅ `npm run build` thành công; `/orders` mở được bằng phiên admin và hiển thị trạng thái chưa có đơn.
+4. ⚠️ Chưa tạo đơn hoặc sửa trạng thái/tồn kho: `.env.local` đang nối tới Supabase dùng chung, không phải database test. Cần test ghi dữ liệu trong môi trường test riêng.
+5. ℹ️ Kiểm tra commit trên GitHub và trạng thái deploy trong Vercel riêng; push thành công không tự xác nhận production đã cập nhật.
 
-- Quản lý danh mục sản phẩm/dịch vụ và thêm/sửa sản phẩm.
-- Nhập kho qua `inventory_movements`; trigger cập nhật tồn kho và chặn tồn âm.
-- Trigger trừ kho cho hàng đủ khi đơn thanh toán và cho hàng đặt trước khi chuyển sang đã giao.
-- Migration `009` đặt `category_id` về `NULL` khi xóa danh mục.
+## Cách kiểm thử nghiệp vụ còn lại
 
-## Chưa có trong UI
+Trên database test, tạo đơn, thêm sản phẩm có tồn kho đủ và thiếu, thử thanh toán, rồi thử chuyển đặt trước sang đã giao. Sau mỗi thao tác, đọc lại `orders`, `order_items`, `products.stock_qty` và `inventory_movements` để xác nhận trigger. Không chạy các thao tác này trên database thật chỉ để thử.
 
-- Chưa có luồng bán hàng để đặt `order_items.fulfillment_status` thành `dat_truoc` hoặc `da_giao`.
-- Chưa có cảnh báo đặt hàng vượt tồn kho hoặc màn hình xem lịch sử `inventory_movements`.
-- Chưa gán danh mục cho licenses.
-
-## Việc cần rà trước khi coi là production-ready
-
-- `inventory_movements` hiện có policy cho phép mọi người dùng authenticated ghi trực tiếp; cần rà và siết RLS nếu nghiệp vụ yêu cầu chỉ admin được điều chỉnh kho.
-- Product actions tra profile qua `auth_user_id`; đối chiếu với liên kết thực tế trong `users` và cách `lib/auth.ts` tra theo `id`.
-- Một số thao tác upsert chưa kiểm tra lỗi Supabase; kiểm tra log và kết quả đọc lại khi thử nghiệm.
+## Điểm cần lưu ý khi test
+- Khi 1 dòng sản phẩm đang `dat_truoc` mà đơn chuyển sang `da_thanh_toan`, trigger thanh toán
+   không trừ kho ngay. Tuy nhiên trigger chuyển sang `da_giao` hiện không kiểm tra trạng thái đơn,
+   dù comment trong code nói chỉ trừ nếu đơn đã thanh toán. Cần xác nhận và sửa/kiểm thử logic này.
+- Khi thêm 1 dòng sản phẩm mới, code tự kiểm tra `stock_qty` để set `dat_truoc` hay
+  `du_hang` ngay từ đầu.

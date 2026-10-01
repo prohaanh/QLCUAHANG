@@ -2,6 +2,7 @@
 
 ## Source of truth
 
+- Start at `docs/index.md`; use `docs/plan/system-roadmap.md` as the ordered implementation and acceptance checklist for the nine product workstreams.
 - Read this file first, then `docs/ARCHITECTURE.md` before changing application behavior, database schema, authorization, or deployment configuration.
 - `README.md` is the operator quick start. Other `GHI-CHU-*`, `GHI_CHU_*`, and branch guides are handoff notes, not authoritative architecture. Verify their claims against the code and migrations.
 - For runtime behavior, current code is authoritative. For database history, inspect every migration in order. If code, docs, and database assumptions disagree, report the mismatch and do not silently choose one.

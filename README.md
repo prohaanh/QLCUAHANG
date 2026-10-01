@@ -5,6 +5,7 @@
 +
 +## Canonical project docs
 +
+- [`docs/index.md`](docs/index.md): documentation map and ordered nine-workstream roadmap.
 +- [`AGENTS.md`](AGENTS.md): instructions for AI coding agents, security boundaries, migration and verification rules.
 +- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): route map, auth/RLS design, data domains, migration inventory, known gaps, and observed deployment status.
 +- `GHI-CHU-*`, `GHI_CHU_*`, and branch-specific guides are handoff notes. Verify them against current code and migrations before treating them as current state.

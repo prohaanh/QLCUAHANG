@@ -21,21 +21,32 @@ export default async function OrdersPage({
 }) {
   const supabase = await createClient();
 
-  const { data: orders } = await supabase
-    .from("orders")
-    .select(
-      `id, status, created_at,
-       customers ( id, name, phone ),
-       order_items ( id, fulfillment_status, item_type )`,
-    )
-    .order("created_at", { ascending: false })
-    .limit(50);
+  const [{ data: orders }, { data: customers }] = await Promise.all([
+    supabase
+      .from("orders")
+      .select(
+        `id, status, created_at,
+         customers ( id, name, phone ),
+         order_items ( id, fulfillment_status, item_type )`,
+      )
+      .order("created_at", { ascending: false })
+      .limit(50),
+    supabase.from("customers").select("id, name, phone").eq("is_active", true).order("name").limit(500),
+  ]);
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold">Đơn hàng</h1>
-        <form action={createOrder.bind(null, null)}>
+        <form action={createOrder} className="flex items-center gap-2">
+          <select name="customer_id" defaultValue="" className="border rounded px-2 py-2 text-sm">
+            <option value="">Khách lẻ</option>
+            {(customers ?? []).map((customer) => (
+              <option key={customer.id} value={customer.id}>
+                {customer.name}{customer.phone ? ` · ${customer.phone}` : ""}
+              </option>
+            ))}
+          </select>
           <button
             type="submit"
             className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium"
@@ -45,9 +56,11 @@ export default async function OrdersPage({
         </form>
       </div>
 
-      {searchParams?.error === "create" && (
+      {(searchParams?.error === "create" || searchParams?.error === "customer") && (
         <p role="alert" className="mb-3 text-sm text-red-600">
-          Không tạo được đơn hàng. Vui lòng thử lại.
+          {searchParams.error === "customer"
+            ? "Không tìm thấy khách hàng đã chọn. Hãy tải lại trang."
+            : "Không tạo được đơn hàng. Vui lòng thử lại."}
         </p>
       )}
 

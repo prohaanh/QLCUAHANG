@@ -41,12 +41,16 @@ export default function OrderDetailClient({ order }: { order: any }) {
   const [itemType, setItemType] = useState<"product" | "service" | "license">("product");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
+  const [quantity, setQuantity] = useState("1");
+  const [selectedLicense, setSelectedLicense] = useState<any>(null);
+  const [licensePrice, setLicensePrice] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const total = items.reduce(
+  const calculatedTotal = items.reduce(
     (sum: number, i: any) => sum + i.quantity * i.unit_price,
     0,
   );
+  const storedTotal = Number(order.total ?? 0);
 
   async function handleSearch(q: string) {
     setQuery(q);
@@ -58,16 +62,13 @@ export default function OrderDetailClient({ order }: { order: any }) {
     setResults(data);
   }
 
-  async function handleAdd(row: any) {
+  async function saveItem(row: any, price: number) {
     const fd = new FormData();
     fd.set("order_id", order.id);
     fd.set("item_type", itemType);
     fd.set("ref_id", row.id);
-    fd.set("quantity", "1");
-    fd.set(
-      "unit_price",
-      String(row.price ?? row.default_price ?? 0),
-    );
+    fd.set("quantity", quantity);
+    fd.set("unit_price", String(price));
 
     startTransition(async () => {
       const res = await addOrderItem(fd);
@@ -77,6 +78,24 @@ export default function OrderDetailClient({ order }: { order: any }) {
       }
       window.location.reload();
     });
+  }
+
+  function handleAdd(row: any) {
+    if (itemType === "license") {
+      setSelectedLicense(row);
+      setLicensePrice("");
+      return;
+    }
+    void saveItem(row, Number(row.price ?? row.default_price ?? 0));
+  }
+
+  function handleAddLicense() {
+    const price = Number(licensePrice);
+    if (!selectedLicense || !licensePrice || !Number.isFinite(price) || price < 0) {
+      setError("Nhập giá bán hợp lệ cho license.");
+      return;
+    }
+    void saveItem(selectedLicense, price);
   }
 
   function handleRemove(itemId: string) {
@@ -130,21 +149,28 @@ export default function OrderDetailClient({ order }: { order: any }) {
         <div className="mb-3 text-sm text-red-600 bg-red-50 rounded-lg p-2">{error}</div>
       )}
 
-      <div className="flex gap-2 mb-4">
-        {(["mo", "da_thanh_toan", "huy"] as const).map((s) => (
-          <button
-            key={s}
-            disabled={isPending}
-            onClick={() => handleStatusChange(s)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border ${
-              status === s
-                ? "bg-blue-600 text-white border-blue-600"
-                : "bg-white text-gray-600 border-gray-300"
-            }`}
-          >
-            {STATUS_LABEL[s]}
-          </button>
-        ))}
+      <div className="flex items-center gap-2 mb-4">
+        <span className="px-3 py-1.5 rounded-full text-xs font-medium border bg-blue-600 text-white border-blue-600">
+          {STATUS_LABEL[status]}
+        </span>
+        {status === "mo" && (
+          <>
+            <button
+              disabled={isPending}
+              onClick={() => handleStatusChange("da_thanh_toan")}
+              className="px-3 py-1.5 rounded text-xs font-medium bg-green-700 text-white disabled:opacity-50"
+            >
+              Đánh dấu đã thanh toán
+            </button>
+            <button
+              disabled={isPending}
+              onClick={() => handleStatusChange("huy")}
+              className="px-3 py-1.5 rounded text-xs font-medium border border-red-300 text-red-700 disabled:opacity-50"
+            >
+              Hủy đơn
+            </button>
+          </>
+        )}
       </div>
 
       <div className="flex flex-col gap-2 mb-4">
@@ -161,7 +187,7 @@ export default function OrderDetailClient({ order }: { order: any }) {
               {item.item_type === "product" && (
                 <select
                   value={item.fulfillment_status}
-                  disabled={isPending}
+                  disabled={isPending || status !== "da_thanh_toan" || item.fulfillment_status === "da_giao"}
                   onChange={(e) =>
                     handleFulfillmentChange(item.id, e.target.value as any)
                   }
@@ -191,9 +217,14 @@ export default function OrderDetailClient({ order }: { order: any }) {
       </div>
 
       <div className="flex items-center justify-between font-semibold border-t pt-3 mb-4">
-        <span>Tổng cộng</span>
-        <span>{total.toLocaleString("vi-VN")}đ</span>
+        <span>Tổng đơn (đã lưu)</span>
+        <span>{storedTotal.toLocaleString("vi-VN")}đ</span>
       </div>
+      {Math.abs(storedTotal - calculatedTotal) > 0.001 && (
+        <p role="alert" className="mb-4 text-sm text-red-700">
+          Tổng đơn không khớp tổng các dòng ({calculatedTotal.toLocaleString("vi-VN")}đ). Kiểm tra trigger/cập nhật dữ liệu trước khi thanh toán.
+        </p>
+      )}
 
       {status === "mo" && (
         <div className="border rounded-lg p-3">
@@ -214,6 +245,8 @@ export default function OrderDetailClient({ order }: { order: any }) {
                       setItemType(t);
                       setResults([]);
                       setQuery("");
+                      setSelectedLicense(null);
+                      setError(null);
                     }}
                     className={`px-3 py-1 rounded-full text-xs font-medium ${
                       itemType === t
@@ -232,6 +265,17 @@ export default function OrderDetailClient({ order }: { order: any }) {
                 placeholder="Gõ tên để tìm..."
                 className="w-full border rounded-lg px-3 py-2 mb-2"
               />
+              <label className="block text-xs text-gray-600 mb-2">
+                Số lượng
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={quantity}
+                  onChange={(event) => setQuantity(event.target.value)}
+                  className="ml-2 w-24 border rounded px-2 py-1"
+                />
+              </label>
               <div className="flex flex-col gap-1 max-h-60 overflow-y-auto">
                 {results.map((row) => (
                   <button
@@ -256,6 +300,30 @@ export default function OrderDetailClient({ order }: { order: any }) {
                   </button>
                 ))}
               </div>
+              {selectedLicense && (
+                <div className="mt-3 border-t pt-3">
+                  <p className="text-sm font-medium">{selectedLicense.product_name}</p>
+                  <label className="block text-xs text-gray-600 mt-2">
+                    Giá license
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={licensePrice}
+                      onChange={(event) => setLicensePrice(event.target.value)}
+                      className="ml-2 w-32 border rounded px-2 py-1"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    disabled={isPending}
+                    onClick={handleAddLicense}
+                    className="mt-2 px-3 py-1.5 rounded bg-blue-600 text-white text-xs disabled:opacity-50"
+                  >
+                    Thêm license
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

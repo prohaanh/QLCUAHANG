@@ -1,9 +1,16 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { getCurrentUser } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import ProductForm from './ProductForm'
 import CategoryManager from './CategoryManager'
+import ServiceForm from './ServiceForm'
 
 export default async function ProductsPage() {
+  const user = await getCurrentUser()
+  if (!user) redirect('/login')
+  if (user.role !== 'admin') redirect('/')
+
   const supabase = await createClient()
 
   const [{ data: categories }, { data: products }, { data: services }] = await Promise.all([
@@ -15,6 +22,9 @@ export default async function ProductsPage() {
   return (
     <div className="p-4 space-y-8">
       <h1 className="text-xl font-bold">Quản lý sản phẩm & dịch vụ</h1>
+      <Link href="/admin/products/scan" className="text-blue-600 underline">
+        Quét mã vạch
+      </Link>
 
       <CategoryManager categories={categories ?? []} />
 
@@ -59,12 +69,14 @@ export default async function ProductsPage() {
 
       <section>
         <h2 className="font-semibold mb-2">Dịch vụ sửa chữa</h2>
+        <ServiceForm categories={categories ?? []} />
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="border-b text-left">
               <th className="p-2">Tên</th>
               <th className="p-2">Nhóm</th>
               <th className="p-2">Giá mặc định</th>
+              <th className="p-2"></th>
             </tr>
           </thead>
           <tbody>
@@ -73,6 +85,9 @@ export default async function ProductsPage() {
                 <td className="p-2">{s.name}</td>
                 <td className="p-2">{s.product_categories?.name ?? '—'}</td>
                 <td className="p-2">{s.default_price.toLocaleString('vi-VN')}đ</td>
+                <td className="p-2">
+                  <ServiceForm categories={categories ?? []} service={s} />
+                </td>
               </tr>
             ))}
           </tbody>

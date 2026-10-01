@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
@@ -49,6 +50,12 @@ export default async function CustomersPage({
           >
             + thêm khách hàng
           </a>
+          <Link
+            href="/customers/scan"
+            className="font-mono text-xs text-copper hover:underline"
+          >
+            Thêm khách bằng CCCD
+          </Link>
         </div>
 
         <div className="flex flex-col divide-y divide-board/15 border-t border-b border-board/15">
